@@ -28,6 +28,7 @@ class QHeaderView;
 namespace OCC {
 
 class AbstractCredentials;
+class ExcludedFiles;
 
 /**
  * @brief The ConfigFile class
@@ -152,6 +153,9 @@ public:
     /**  Returns a new settings pre-set in a specific group.  The Settings will be created
          with the given parent. If no parent is specified, the caller must destroy the settings */
     static std::unique_ptr<QSettings> settingsWithGroup(const QString &group, QObject *parent = 0);
+
+    /// Add the system and user exclude file path to the ExcludedFiles instance.
+    static void setupDefaultExcludeFilePaths(ExcludedFiles &excludedFiles);
 
 protected:
     QVariant getPolicySetting(const QString &policy, const QVariant &defaultValue = QVariant()) const;

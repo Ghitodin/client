@@ -239,7 +239,7 @@ private slots:
         statusSpy.clear();
 
         // Clears the exclude expr above
-        fakeFolder.syncEngine().excludedFiles().reloadExcludes();
+        fakeFolder.syncEngine().excludedFiles().reloadExcludeFiles();
         fakeFolder.scheduleSync();
         fakeFolder.execUntilBeforePropagation();
         QCOMPARE(statusSpy.statusOf(""), SyncFileStatus(SyncFileStatus::StatusSync));

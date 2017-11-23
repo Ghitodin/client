@@ -30,7 +30,6 @@
 #include "socketapi.h"
 #include "theme.h"
 #include "filesystem.h"
-#include "excludedfiles.h"
 
 #include "creds/abstractcredentials.h"
 
@@ -79,7 +78,7 @@ Folder::Folder(const FolderDefinition &definition,
     // pass the setting if hidden files are to be ignored, will be read in csync_update
     _engine->setIgnoreHiddenFiles(_definition.ignoreHiddenFiles);
 
-    if (!setIgnoredFiles())
+    if (!reloadExcludes())
         qCWarning(lcFolder, "Could not read system exclude file");
 
     connect(_accountState.data(), &AccountState::isConnectedChanged, this, &Folder::canSyncChanged);
@@ -595,24 +594,9 @@ void Folder::wipe()
         FolderMan::instance()->socketApi()->slotRegisterPath(alias());
 }
 
-bool Folder::setIgnoredFiles()
+bool Folder::reloadExcludes()
 {
-    // Note: Doing this on each sync run and on Folder construction is
-    // unnecessary, because _engine->excludedFiles() persists between
-    // sync runs. This is not a big problem because ExcludedFiles maintains
-    // a QSet of files to load.
-    ConfigFile cfg;
-    QString systemList = cfg.excludeFile(ConfigFile::SystemScope);
-    qCInfo(lcFolder) << "Adding system ignore list to csync:" << systemList;
-    _engine->excludedFiles().addExcludeFilePath(systemList);
-
-    QString userList = cfg.excludeFile(ConfigFile::UserScope);
-    if (QFile::exists(userList)) {
-        qCInfo(lcFolder) << "Adding user defined ignore list to csync:" << userList;
-        _engine->excludedFiles().addExcludeFilePath(userList);
-    }
-
-    return _engine->excludedFiles().reloadExcludes();
+    return _engine->excludedFiles().reloadExcludeFiles();
 }
 
 void Folder::setProxyDirty(bool value)
@@ -647,7 +631,7 @@ void Folder::startSync(const QStringList &pathList)
 
     _fileLog->start(path());
 
-    if (!setIgnoredFiles()) {
+    if (!reloadExcludes()) {
         slotSyncError(tr("Could not read system exclude file"));
         QMetaObject::invokeMethod(this, "slotSyncFinished", Qt::QueuedConnection, Q_ARG(bool, false));
         return;
